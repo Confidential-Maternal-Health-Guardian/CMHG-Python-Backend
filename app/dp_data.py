@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from app.dataloader import DataLoader
+from dataloader import DataLoader
 
 from sklearn.neighbors import KernelDensity
 from sklearn.model_selection import GridSearchCV
@@ -74,10 +74,10 @@ class DataPerturbator:
         self.syn_df = newdf
 
     def get_data(self):
-        fd = FitData()
-        fd.original_train_df = self.df
-        fd.syn_train_df = self.syn_df
-        fd.test_df = self.test_df
+        fd = FitData(self.df, self.syn_df, self.test_df)
+        #fd.original_train_df = self.df
+        #fd.syn_train_df = self.syn_df
+        #fd.test_df = self.test_df
 
         return fd
     
