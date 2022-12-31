@@ -77,10 +77,10 @@ class Net(torch.nn.Module):
 
 class SGD:
     def __init__(self):
-        self.neuron_param = 358
-        self.lr = 10**-1
-        self.batch_size = 31
-        self.epoch_num = 233
+        self.neuron_param = 380
+        self.lr = 10**-2
+        self.batch_size = 16
+        self.epoch_num = 274
         
         self.model = Net(6, self.neuron_param, 3)
         if torch.cuda.is_available():
@@ -141,15 +141,17 @@ class SGD:
                 correct += (predicted == labels).sum().item()
 
             accuracy = 100 * correct / total
-            print(f'Accuracy: {accuracy:.2f}%')
+            #print(f'Accuracy: {accuracy:.2f}%')
+            return accuracy
+            
 
 class DPSGD:
     def __init__(self, epsilon, delta):
         #{'neuron_param': 358, 'learning_rate': -1, 'batch_param': 31, 'epoch_param': 233} acc 71
-        self.neuron_param = 358
-        self.lr = 10**-1
-        self.batch_size = 31
-        self.epoch_num = 233
+        self.neuron_param = 380
+        self.lr = 10**-2
+        self.batch_size = 16
+        self.epoch_num = 274
 
         self.epsilon = epsilon
         self.delta = delta
@@ -220,7 +222,8 @@ class DPSGD:
                 correct += (predicted == labels).sum().item()
 
             accuracy = 100 * correct / total
-            print(f'Accuracy: {accuracy:.2f}%')
+            #print(f'Accuracy: {accuracy:.2f}%')
+            return accuracy
 
 
 def compute_noise_scale(epsilon, delta, parameters):
