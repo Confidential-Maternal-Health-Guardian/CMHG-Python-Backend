@@ -143,6 +143,17 @@ class SGD:
             accuracy = 100 * correct / total
             #print(f'Accuracy: {accuracy:.2f}%')
             return accuracy
+    
+    def predict(self, data):
+        x = torch.tensor([data.values], dtype=torch.float)
+        if torch.cuda.is_available():
+            x = x.cuda()
+        
+        with torch.no_grad():
+            outputs = self.model(x)
+            _, predicted = torch.max(outputs.data, 1)
+
+        return predicted.item()
             
 
 class DPSGD:
@@ -224,6 +235,17 @@ class DPSGD:
             accuracy = 100 * correct / total
             #print(f'Accuracy: {accuracy:.2f}%')
             return accuracy
+
+    def predict(self, data):
+        x = torch.tensor([data.values], dtype=torch.float)
+        if torch.cuda.is_available():
+            x = x.cuda()
+        
+        with torch.no_grad():
+            outputs = self.model(x)
+            _, predicted = torch.max(outputs.data, 1)
+
+        return predicted.item()
 
 
 def compute_noise_scale(epsilon, delta, parameters):
