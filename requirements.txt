@@ -2,7 +2,8 @@ fastapi
 uvicorn
 pandas
 numpy
-math
+matplotlib
 diffprivlib
 sklearn
 torch
+docker-compose
