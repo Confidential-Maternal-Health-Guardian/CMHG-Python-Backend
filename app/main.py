@@ -31,15 +31,6 @@ sgd_accuracy = sgd.train(synthetic=False)
 print("SGD Accuracy: ", sgd_accuracy)
 print('models trained')
 
-class Info(BaseModel):
-    Age: int
-    SystolicBP: int
-    DiastolicBP: int
-    BS: float
-    BodyTemp: float
-    HeartRate: int
-    model_type: str
-
 class Res(BaseModel):
     prediction: int
 
@@ -53,18 +44,23 @@ async def predict(info: Request):
     info_dict = await info.json()
     info_dict = info_dict['query']
     print("Reguest:", info_dict)
-    if info_dict['model_type'] == "sgd":
+
+    model_selection = info_dict['ModelType']
+    epsilon = info_dict['epsilon']
+
+    if model_selection == "sgd":
         classifier = sgd
-    elif info_dict['model_type'] == "dpsgd":
+    elif model_selection == "dpsgd":
         classifier = dpsgd
-    elif info_dict['model_type'] == "rf":
+    elif model_selection == "rf":
         classifier = rf
-    elif info_dict['model_type'] == "dpr":
+    elif model_selection == "dpr":
         classifier = dpr
     else:
         raise Exception
 
-    del info_dict['model_type']
+    del info_dict['ModelType']
+    del info_dict['epsilon']
 
     df = pd.DataFrame(info_dict, index=[0])
     
@@ -75,6 +71,4 @@ async def predict(info: Request):
 
 
 if __name__ == '__main__':
-
-
     uvicorn.run("main:app", host="0.0.0.0", port=5000, reload=True)
