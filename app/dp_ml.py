@@ -30,7 +30,7 @@ class RandomForest:
         self.classifier.fit(self.train_df.drop('RiskLevel', axis=1), self.train_df.RiskLevel)
 
     def predict(self, data):
-        return self.classifier.predict(data)
+        return self.classifier.predict(data)[0]
 
 
 class DPRandomForest: # TODO: fix
@@ -51,7 +51,7 @@ class DPRandomForest: # TODO: fix
         self.classifier.fit(self.train_df.drop('RiskLevel', axis=1), self.train_df.RiskLevel)
 
     def predict(self, data):
-        return self.classifier.predict(data)
+        return self.classifier.predict(data)[0]
 
 
 class Net(torch.nn.Module):
@@ -145,7 +145,7 @@ class SGD:
             return accuracy
     
     def predict(self, data):
-        x = torch.tensor([data.values], dtype=torch.float)
+        x = torch.tensor(data.values, dtype=torch.float)
         if torch.cuda.is_available():
             x = x.cuda()
         
@@ -237,7 +237,7 @@ class DPSGD:
             return accuracy
 
     def predict(self, data):
-        x = torch.tensor([data.values], dtype=torch.float)
+        x = torch.tensor(data.values, dtype=torch.float)
         if torch.cuda.is_available():
             x = x.cuda()
         

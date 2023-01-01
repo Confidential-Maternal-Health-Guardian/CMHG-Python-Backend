@@ -5,68 +5,82 @@ from pydantic import BaseModel
 import uvicorn
 import warnings
 import pandas as pd
+import time
 
 warnings.filterwarnings("ignore")
 
-app = FastAPI()
 
-dpr = None
-rf = None
-sgd = None
-dpsgd = None
+class Req(BaseModel):
+    age: int
+    systolicBp: int
+    diastolicBp: int
+    bs: float
+    bodyTemp: float
+    heartRate: int
+    modelType: str
+    epsilon: float
 
-dpr = DPRandomForest()
-rf = RandomForest()
-dpsgd = DPSGD(epsilon=1, delta=1e-8)
-sgd = SGD()
-print('models initialized')
-
-dpr.train()
-rf.train()
-
-dpsgd_accuracy = dpsgd.train(synthetic=False)
-print("DPSGD Accuracy: ", dpsgd_accuracy)
-
-sgd_accuracy = sgd.train(synthetic=False)
-print("SGD Accuracy: ", sgd_accuracy)
-print('models trained')
 
 class Res(BaseModel):
-    prediction: int
+    riskLevel: str
+    confidence: float
+
+
+app = FastAPI()
+
+models = {}
+riskLevels = {0:"low risk", 1:"mid risk", 2:"high risk"}
+
+@app.on_event('startup')
+def init_models():
+    models['dpr'] = DPRandomForest()
+    models['rf'] = RandomForest()
+    models['dpsgd'] = DPSGD(epsilon=1, delta=1e-8)
+    models['sgd'] = SGD()
+    print('models initialized')
+
+    models['dpr'].train()
+    models['rf'].train()
+    
+    start = time.time()
+    dpsgd_accuracy = models['dpsgd'].train(synthetic=False)
+    end = time.time()
+    print(f"DPSGD Accuracy: {dpsgd_accuracy}% {end - start}s")
+
+    start = time.time()
+    sgd_accuracy = models['sgd'].train(synthetic=False)
+    end = time.time()
+    print(f"SGD Accuracy: {sgd_accuracy}% {end - start}s")
+    print('models trained')
+    return models
+
 
 @app.get("/")
 def hello_world():
     return "Hello World"
 
-@app.post("/predict/")
-async def predict(info: Request):
+@app.post("/predict")
+async def predict(body: Req):
     classifier = None
-    info_dict = await info.json()
-    info_dict = info_dict['query']
-    print("Reguest:", info_dict)
+    
+    model_selection = body.modelType
+    epsilon = body.epsilon
 
-    model_selection = info_dict['ModelType']
-    epsilon = info_dict['epsilon']
-
-    if model_selection == "sgd":
-        classifier = sgd
-    elif model_selection == "dpsgd":
-        classifier = dpsgd
-    elif model_selection == "rf":
-        classifier = rf
-    elif model_selection == "dpr":
-        classifier = dpr
+    if model_selection in models:
+        classifier = models[model_selection]
     else:
         raise Exception
 
-    del info_dict['ModelType']
-    del info_dict['epsilon']
-
-    df = pd.DataFrame(info_dict, index=[0])
+    info = body.dict()
+    del info['modelType']
+    del info['epsilon']
     
-    predict_n = classifier.predict(df)
+    df = pd.DataFrame(info, index=[0])
+    
+    prediction = classifier.predict(df)
 
-    response = Res(prediction=predict_n)
+
+    response = Res(riskLevel=riskLevels[prediction], confidence=0.5)
     return response
 
 
