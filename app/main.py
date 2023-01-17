@@ -26,7 +26,6 @@ class Req(BaseModel):
 
 class Res(BaseModel):
     riskLevel: str
-    confidence: float
 
 
 app = FastAPI()
@@ -85,7 +84,7 @@ async def predict(body: Req):
     prediction = classifier.predict(df)
 
 
-    response = Res(riskLevel=riskLevels[prediction], confidence=0.5)
+    response = Res(riskLevel=riskLevels[prediction])
     return response
 
 
