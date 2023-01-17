@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from dataloader import DataLoader
+from app.dataloader import DataLoader
 
 from sklearn.neighbors import KernelDensity
 from sklearn.model_selection import GridSearchCV

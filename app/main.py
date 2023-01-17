@@ -1,11 +1,14 @@
-from dp_ml import RandomForest, DPRandomForest, SGD, DPSGD
-
+import sys
+import os
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 import uvicorn
 import warnings
 import pandas as pd
 import time
+import torch
+sys.path.append(os.getcwd())
+from app.dp_ml import RandomForest, DPRandomForest, SGD, DPSGD
 
 warnings.filterwarnings("ignore")
 
@@ -35,22 +38,22 @@ riskLevels = {0:"low risk", 1:"mid risk", 2:"high risk"}
 def init_models():
     models['dpr'] = DPRandomForest()
     models['rf'] = RandomForest()
-    models['dpsgd'] = DPSGD(epsilon=1, delta=1e-8)
+    models['dpsgd'] = {}
     models['sgd'] = SGD()
     print('models initialized')
+    epsilons = [0.5, 1.0, 1.5, 2.0]
 
+    for epsilon in epsilons:
+        dpsgd = DPSGD(epsilon=epsilon, delta=1e-8)
+        model_path = os.path.join(os.getcwd(), "models", "dpsgd_" + str(epsilon).replace('.','_') + ".pt")
+        dpsgd.model.load_state_dict(torch.load(model_path))
+        models['dpsgd'][str(epsilon)] = dpsgd
+
+    model_path = os.path.join(os.getcwd(), "models", "sgd.pt")
+    models['sgd'].model.load_state_dict(torch.load(model_path))
+    
     models['dpr'].train()
     models['rf'].train()
-    
-    start = time.time()
-    dpsgd_accuracy = models['dpsgd'].train(synthetic=False)
-    end = time.time()
-    print(f"DPSGD Accuracy: {dpsgd_accuracy}% {end - start}s")
-
-    start = time.time()
-    sgd_accuracy = models['sgd'].train(synthetic=False)
-    end = time.time()
-    print(f"SGD Accuracy: {sgd_accuracy}% {end - start}s")
     print('models trained')
     return models
 
@@ -68,6 +71,8 @@ async def predict(body: Req):
 
     if model_selection in models:
         classifier = models[model_selection]
+        if type(classifier) is dict:
+            classifier = classifier[str(epsilon)]
     else:
         raise Exception
 

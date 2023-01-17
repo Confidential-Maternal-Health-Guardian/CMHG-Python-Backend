@@ -1,5 +1,5 @@
 import diffprivlib
-from dp_data import DataPerturbator, FitData
+from app.dp_data import DataPerturbator, FitData
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 import torch
@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 import pandas as pd
 import numpy as np
 import math
+from sklearn.model_selection import train_test_split
 
 DATA_BOUNDS = ([0, 5, 4, 60, 36, 7], [100, 25, 15, 250, 39.5, 95])
 
@@ -173,7 +174,11 @@ class DPSGD:
 
         self.loss_fn = torch.nn.CrossEntropyLoss()
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr)
-        self.noise_scale = compute_noise_scale(self.epsilon, self.delta, self.model.parameters())
+
+        num_elements = sum([param.numel() for param in self.model.parameters()])
+        noise_scale = math.sqrt(2 * math.log(1.25 / delta)) / epsilon
+        noise_scale /= num_elements
+        self.noise_scale = noise_scale
 
     def train(self, synthetic):
         dtp = DataPerturbator()
@@ -200,7 +205,8 @@ class DPSGD:
         dataloader_test = DataLoader(dataset_test, batch_size=self.batch_size, shuffle=True)
 
         for epoch in range(self.epoch_num):
-            for data, labels in dataloader_train:
+            for data_train, labels_train in dataloader_train:
+                data, _, labels, _ = train_test_split(data_train, labels_train, test_size = 0.1)
                 if torch.cuda.is_available():
                     data = data.cuda()
                     labels = labels.cuda()
@@ -210,11 +216,12 @@ class DPSGD:
                 loss = self.loss_fn(outputs, labels)
                 loss.backward()
 
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.epsilon)
+
                 with torch.no_grad():
                     for param in self.model.parameters():
                         param.grad += self.noise_scale * torch.randn_like(param.grad)
                         
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.epsilon)
                 self.optimizer.step()
 
         # testing
@@ -246,10 +253,3 @@ class DPSGD:
             _, predicted = torch.max(outputs.data, 1)
 
         return predicted.item()
-
-
-def compute_noise_scale(epsilon, delta, parameters):
-    num_elements = sum([param.numel() for param in parameters])
-    noise_scale = math.sqrt(2 * math.log(1.25 / delta)) / epsilon
-    noise_scale /= num_elements
-    return noise_scale
