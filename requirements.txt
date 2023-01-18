@@ -1,7 +1,7 @@
 diffprivlib==0.6.2
-fastapi==0.88.0
+fastapi==0.89.1
 matplotlib==3.5.1
-numpy==1.21.5
+numpy
 pandas==1.4.2
 pydantic==1.10.4
 scikit_learn==1.2.0

@@ -1,5 +1,14 @@
-FROM python:3.9
-COPY ./requirements.txt /requirements.txt
+FROM python:3.9-slim
+
+COPY ./requirements.txt chmg-python/requirements.txt
+COPY ./app chmg-python/app
+COPY ./models chmg-python/models
+COPY ./notebooks chmg-python/notebooks
+
+WORKDIR /chmg-python
+
 RUN pip install -r requirements.txt
-COPY ./app /app
+
+EXPOSE 5000
+
 CMD ["python", "app/main.py"]
