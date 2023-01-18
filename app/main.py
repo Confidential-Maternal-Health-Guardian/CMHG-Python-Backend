@@ -8,7 +8,8 @@ import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-sys.path.append(os.getcwd())
+main_path = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(main_path)
 from app.dp_ml import RandomForest, DPRandomForest, SGD, DPSGD
 
 warnings.filterwarnings("ignore")
@@ -46,11 +47,11 @@ def init_models():
 
     for epsilon in epsilons:
         dpsgd = DPSGD(epsilon=epsilon, delta=1e-8)
-        model_path = os.path.join(os.path.dirname(os.getcwd()), "models", "dpsgd_" + str(epsilon).replace('.', '_') + ".pt")
+        model_path = os.path.join(main_path, "models", "dpsgd_" + str(epsilon).replace('.', '_') + ".pt")
         dpsgd.model.load_state_dict(torch.load(model_path))
         models['dpsgd'][str(epsilon)] = dpsgd
 
-    model_path = os.path.join(os.path.dirname(os.getcwd()), "models", "sgd.pt")
+    model_path = os.path.join(main_path, "models", "sgd.pt")
     models['sgd'].model.load_state_dict(torch.load(model_path))
 
     models['dpr'].train()
