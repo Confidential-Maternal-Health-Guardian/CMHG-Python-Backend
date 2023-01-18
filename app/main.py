@@ -1,12 +1,13 @@
-import sys
 import os
-from fastapi import FastAPI, Request
-from pydantic import BaseModel
-import uvicorn
+import sys
 import warnings
+
 import pandas as pd
-import time
 import torch
+import uvicorn
+from fastapi import FastAPI
+from pydantic import BaseModel
+
 sys.path.append(os.getcwd())
 from app.dp_ml import RandomForest, DPRandomForest, SGD, DPSGD
 
@@ -31,7 +32,8 @@ class Res(BaseModel):
 app = FastAPI()
 
 models = {}
-riskLevels = {0:"low risk", 1:"mid risk", 2:"high risk"}
+riskLevels = {0: "low risk", 1: "mid risk", 2: "high risk"}
+
 
 @app.on_event('startup')
 def init_models():
@@ -44,13 +46,13 @@ def init_models():
 
     for epsilon in epsilons:
         dpsgd = DPSGD(epsilon=epsilon, delta=1e-8)
-        model_path = os.path.join(os.getcwd(), "models", "dpsgd_" + str(epsilon).replace('.','_') + ".pt")
+        model_path = os.path.join(os.path.dirname(os.getcwd()), "models", "dpsgd_" + str(epsilon).replace('.', '_') + ".pt")
         dpsgd.model.load_state_dict(torch.load(model_path))
         models['dpsgd'][str(epsilon)] = dpsgd
 
-    model_path = os.path.join(os.getcwd(), "models", "sgd.pt")
+    model_path = os.path.join(os.path.dirname(os.getcwd()), "models", "sgd.pt")
     models['sgd'].model.load_state_dict(torch.load(model_path))
-    
+
     models['dpr'].train()
     models['rf'].train()
     print('models trained')
@@ -61,10 +63,11 @@ def init_models():
 def hello_world():
     return "Hello World"
 
+
 @app.post("/predict")
 async def predict(body: Req):
     classifier = None
-    
+
     model_selection = body.modelType
     epsilon = body.epsilon
 
@@ -78,11 +81,10 @@ async def predict(body: Req):
     info = body.dict()
     del info['modelType']
     del info['epsilon']
-    
-    df = pd.DataFrame(info, index=[0])
-    
-    prediction = classifier.predict(df)
 
+    df = pd.DataFrame(info, index=[0])
+
+    prediction = classifier.predict(df)
 
     response = Res(riskLevel=riskLevels[prediction])
     return response
