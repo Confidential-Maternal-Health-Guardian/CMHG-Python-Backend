@@ -31,7 +31,7 @@ class RandomForest:
         self.classifier.fit(self.train_df.drop('RiskLevel', axis=1), self.train_df.RiskLevel)
 
     def predict(self, data):
-        return self.classifier.predict(data)[0]
+        return self.classifier.predict(data.values)[0]
 
 
 class DPRandomForest: # TODO: fix
@@ -52,7 +52,7 @@ class DPRandomForest: # TODO: fix
         self.classifier.fit(self.train_df.drop('RiskLevel', axis=1), self.train_df.RiskLevel)
 
     def predict(self, data):
-        return self.classifier.predict(data)[0]
+        return self.classifier.predict(data.values)[0]
 
 
 class Net(torch.nn.Module):
