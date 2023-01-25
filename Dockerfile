@@ -1,11 +1,11 @@
 FROM python:3.9-slim
 
-COPY ./requirements.txt chmg-python/requirements.txt
-COPY ./app chmg-python/app
-COPY ./models chmg-python/models
-COPY ./notebooks chmg-python/notebooks
+COPY ./requirements.txt cmhg-python/requirements.txt
+COPY ./app cmhg-python/app
+COPY ./models cmhg-python/models
+COPY ./notebooks cmhg-python/notebooks
 
-WORKDIR /chmg-python
+WORKDIR /cmhg-python
 
 RUN pip install -r requirements.txt
 

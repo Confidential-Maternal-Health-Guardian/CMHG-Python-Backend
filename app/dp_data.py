@@ -47,9 +47,9 @@ class DataPerturbator:
         grid_search.fit(df_l.drop("RiskLevel", axis=1))
         kde_l = grid_search.best_estimator_
 
-        new_high = kde_h.sample(int(len(df_h) / 10),)
-        new_mid = kde_m.sample(int(len(df_m) / 10),)
-        new_low = kde_l.sample(int(len(df_l) / 10),)
+        new_high = kde_h.sample(int(len(df_h)),)
+        new_mid = kde_m.sample(int(len(df_m)),)
+        new_low = kde_l.sample(int(len(df_l)),)
 
         syn_values = np.vstack([np.hstack([new_high, np.repeat(2, len(new_high)).reshape(-1, 1)]), np.hstack([new_mid, np.repeat(1, len(new_mid)).reshape(-1, 1)]),np.hstack([new_low, np.repeat(0, len(new_low)).reshape(-1, 1)])])
 
@@ -57,7 +57,7 @@ class DataPerturbator:
         df.RiskLevel[df['RiskLevel'] == 'mid risk'] = 1
         df.RiskLevel[df['RiskLevel'] == 'high risk'] = 2
 
-        newdf = pd.concat([df, pd.DataFrame(syn_values, columns=df.columns)])
+        newdf = pd.DataFrame(syn_values, columns=df.columns)
 
         newdf.RiskLevel = newdf.RiskLevel.astype(int)
         newdf.RiskLevel = pd.Categorical(newdf.RiskLevel)

@@ -38,7 +38,7 @@ riskLevels = {0: "low risk", 1: "mid risk", 2: "high risk"}
 
 @app.on_event('startup')
 def init_models():
-    models['dpr'] = DPRandomForest()
+    models['dpr'] = {}
     models['rf'] = RandomForest()
     models['dpsgd'] = {}
     models['sgd'] = SGD()
@@ -51,10 +51,14 @@ def init_models():
         dpsgd.model.load_state_dict(torch.load(model_path))
         models['dpsgd'][str(epsilon)] = dpsgd
 
+        dprf = DPRandomForest(epsilon=epsilon)
+        dprf.train()
+        models['dpr'][str(epsilon)] = dprf
+
     model_path = os.path.join(main_path, "models", "sgd.pt")
     models['sgd'].model.load_state_dict(torch.load(model_path))
 
-    models['dpr'].train()
+    
     models['rf'].train()
     print('models trained')
     return models
